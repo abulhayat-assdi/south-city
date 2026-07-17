@@ -1,0 +1,39 @@
+---
+/** 12-facility icon grid — 2 cols mobile → 4 cols desktop (spec §6.10). */
+import { ui, t, type Lang } from '../i18n/ui';
+import { amenities } from '../content';
+import SectionHeading from './SectionHeading.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<section id="amenities" class="section-pad bg-white">
+  <div class="container-c">
+    <SectionHeading
+      eyebrow={t(ui.sections.amenitiesEyebrow, lang)}
+      title={t(ui.sections.amenitiesTitle, lang)}
+    />
+
+    <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4" role="list">
+      {
+        amenities.map((a, i) => (
+          <li class="reveal card flex items-center gap-3.5 px-4 py-4 sm:px-5 sm:py-5">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold">
+              <Icon name={a.icon} class="h-[22px] w-[22px]" />
+            </span>
+            <span class="font-medium leading-snug text-navy">
+              <span class="mr-1.5 font-display text-xs font-bold text-gold/70" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              {t(a.label, lang)}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

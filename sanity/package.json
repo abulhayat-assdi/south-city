@@ -1,0 +1,18 @@
+{
+  "name": "south-city-studio",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sanity Studio for the South City website — owner-editable content.",
+  "main": "package.json",
+  "scripts": {
+    "dev": "sanity dev",
+    "build": "sanity build",
+    "deploy": "sanity deploy"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sanity": "^3.62.0",
+    "styled-components": "^6.1.13"
+  }
+}

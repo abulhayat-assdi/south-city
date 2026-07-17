@@ -1,0 +1,19 @@
+---
+/** Aroland-style section heading: gold eyebrow + big navy display heading. */
+interface Props {
+  eyebrow: string;
+  title: string;
+  id?: string;
+  light?: boolean; // for dark (navy) sections
+  center?: boolean;
+}
+const { eyebrow, title, id, light = false, center = false } = Astro.props;
+---
+
+<div class:list={['reveal mb-8 md:mb-12', center && 'text-center']}>
+  <p class:list={['eyebrow', light && '!text-gold-light', center && 'justify-center']}>
+    {eyebrow}
+  </p>
+  <h2 id={id} class:list={[light && '!text-white']}>{title}</h2>
+  <slot />
+</div>

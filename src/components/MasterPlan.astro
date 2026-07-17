@@ -1,0 +1,145 @@
+---
+import { Image } from 'astro:assets';
+import planImg from '../assets/img/masterplan.webp';
+import { ui, t, type Lang } from '../i18n/ui';
+import { hotspots, waLink, remoteImages } from '../content';
+import SectionHeading from './SectionHeading.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+// Sanity-uploaded master plan (if any) — optimized + emitted at build time
+const planSrc = remoteImages.masterPlan ?? planImg;
+const remoteProps = typeof planSrc === 'string' ? { inferSize: true as const } : {};
+const planAlt =
+  lang === 'bn'
+    ? 'সাউথ সিটি মাস্টার প্ল্যান ও সেক্টর লেআউট'
+    : 'South City master plan and sector layout';
+---
+
+<section id="master-plan" class="section-pad bg-white">
+  <div class="container-c">
+    <SectionHeading
+      eyebrow={t(ui.sections.planEyebrow, lang)}
+      title={t(ui.sections.planTitle, lang)}
+    >
+      <p class="mt-3 hidden text-muted sm:block">{t(ui.sections.planHint, lang)}</p>
+    </SectionHeading>
+
+    <!-- interactive plan (tablet & up) -->
+    <div class="reveal relative hidden overflow-hidden rounded-xl border border-line shadow-card sm:block" id="plan-wrap">
+      <Image
+        src={planSrc}
+        {...remoteProps}
+        alt={planAlt}
+        widths={[768, 1280, 1600]}
+        sizes="(max-width: 1200px) 100vw, 1200px"
+        quality={78}
+        class="h-auto w-full"
+      />
+      {
+        hotspots.map((h) => (
+          <button
+            type="button"
+            class="hotspot"
+            style={`left:${h.x}%; top:${h.y}%`}
+            data-hotspot={h.id}
+            aria-expanded="false"
+            aria-label={t(h.name, lang)}
+          />
+        ))
+      }
+
+      <!-- info card -->
+      <div
+        id="plan-card"
+        class="pointer-events-none absolute inset-x-3 bottom-3 z-10 max-w-md translate-y-2 rounded-xl border border-line bg-white/95 p-5 opacity-0 shadow-card backdrop-blur transition-all duration-200 sm:inset-x-auto sm:right-4 sm:bottom-4"
+        role="status"
+      >
+        <h3 id="plan-card-title" class="text-lg font-bold text-navy"></h3>
+        <p id="plan-card-desc" class="mt-1.5 text-sm text-muted"></p>
+        <a
+          id="plan-card-wa"
+          href={waLink(lang)}
+          target="_blank"
+          rel="noopener"
+          class="btn-wa mt-4 !min-h-[42px] !px-4 !py-2 !text-sm"
+          data-track="whatsapp_click"
+        >
+          <Icon name="whatsapp" class="h-4 w-4" />
+          {t(ui.plan.enquire, lang)}
+        </a>
+      </div>
+    </div>
+
+    <!-- stacked fallback (small screens) + SEO-friendly list -->
+    <div class="sm:hidden">
+      <Image
+        src={planSrc}
+        {...remoteProps}
+        alt={planAlt}
+        widths={[480, 768]}
+        sizes="100vw"
+        quality={78}
+        class="reveal h-auto w-full rounded-xl border border-line"
+      />
+      <h3 class="mt-6 font-display text-lg font-bold text-navy">{t(ui.plan.listTitle, lang)}</h3>
+      <ul class="mt-3 divide-y divide-line" role="list">
+        {
+          hotspots.map((h) => (
+            <li class="py-3">
+              <p class="font-semibold text-navy">
+                <span class="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-gold" aria-hidden="true" />
+                {t(h.name, lang)}
+              </p>
+              <p class="mt-0.5 pl-5 text-sm text-muted">{t(h.desc, lang)}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { hotspotData } from '../scripts/plan-data';
+
+  const wrap = document.getElementById('plan-wrap');
+  const card = document.getElementById('plan-card');
+  if (wrap && card) {
+    const title = document.getElementById('plan-card-title')!;
+    const desc = document.getElementById('plan-card-desc')!;
+    const wa = document.getElementById('plan-card-wa') as HTMLAnchorElement;
+    const lang = document.documentElement.lang as 'bn' | 'en';
+    const buttons = wrap.querySelectorAll<HTMLButtonElement>('[data-hotspot]');
+
+    const hide = () => {
+      card.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+      buttons.forEach((b) => b.setAttribute('aria-expanded', 'false'));
+    };
+
+    buttons.forEach((btn) =>
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const spot = hotspotData.find((h) => h.id === btn.dataset.hotspot);
+        if (!spot) return;
+        const wasOpen = btn.getAttribute('aria-expanded') === 'true';
+        hide();
+        if (wasOpen) return;
+        title.textContent = spot.name[lang];
+        desc.textContent = spot.desc[lang];
+        const msg =
+          lang === 'bn'
+            ? `আসসালামু আলাইকুম, আমি সাউথ সিটির "${spot.name.bn}" সম্পর্কে জানতে আগ্রহী।`
+            : `Assalamu Alaikum, I'm interested in "${spot.name.en}" at South City.`;
+        wa.href = wa.href.split('?')[0] + '?text=' + encodeURIComponent(msg);
+        card.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+        btn.setAttribute('aria-expanded', 'true');
+      })
+    );
+    document.addEventListener('click', hide);
+  }
+</script>

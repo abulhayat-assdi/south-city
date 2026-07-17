@@ -1,0 +1,45 @@
+---
+/** Numbered "project at a glance" block — pattern borrowed from Aroland Home-2. */
+import { ui, t, type Lang } from '../i18n/ui';
+import { facts, settings } from '../content';
+import SectionHeading from './SectionHeading.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const pad = (n: number) => String(n + 1).padStart(2, '0');
+---
+
+<section class="section-pad bg-bg-soft">
+  <div class="container-c">
+    <SectionHeading
+      eyebrow={t(ui.sections.factsEyebrow, lang)}
+      title={t(ui.sections.factsTitle, lang)}
+    />
+
+    <dl class="grid gap-x-12 md:grid-cols-2">
+      {
+        facts.map((f, i) => (
+          <div class="reveal flex items-baseline gap-4 border-b border-line py-4">
+            <span class="font-display text-sm font-bold text-gold" aria-hidden="true">
+              {pad(i)}
+            </span>
+            <dt class="w-32 shrink-0 text-sm font-semibold uppercase tracking-wide text-muted sm:w-40">
+              {t(f.label, lang)}
+            </dt>
+            <dd class="flex-1 font-medium text-navy">{t(f.value, lang)}</dd>
+          </div>
+        ))
+      }
+    </dl>
+
+    <div class="reveal mt-8">
+      <a href={settings.brochureUrl} class="btn-gold" download data-track="brochure_download">
+        <Icon name="download" class="h-5 w-5" />
+        {t(ui.facts.downloadBrochure, lang)}
+      </a>
+    </div>
+  </div>
+</section>

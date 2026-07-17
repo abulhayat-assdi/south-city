@@ -1,0 +1,36 @@
+---
+import { ui, t, type Lang } from '../i18n/ui';
+import { settings, waLink } from '../content';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<!-- mobile-only sticky conversion bar (body has pb-14 md:pb-0 so it never covers content) -->
+<nav
+  class="fixed inset-x-0 bottom-0 z-50 grid h-14 grid-cols-2 md:hidden"
+  aria-label={lang === 'bn' ? 'দ্রুত যোগাযোগ' : 'Quick contact'}
+  style="padding-bottom: env(safe-area-inset-bottom)"
+>
+  <a
+    href={`tel:${settings.phone}`}
+    class="flex items-center justify-center gap-2 bg-navy font-display text-base font-semibold text-white"
+    data-track="call_click"
+  >
+    <Icon name="phone" class="h-5 w-5 text-gold-light" />
+    {t(ui.sticky.call, lang)}
+  </a>
+  <a
+    href={waLink(lang)}
+    target="_blank"
+    rel="noopener"
+    class="flex items-center justify-center gap-2 bg-whatsapp font-display text-base font-semibold text-white"
+    data-track="whatsapp_click"
+  >
+    <Icon name="whatsapp" class="h-5 w-5" />
+    {t(ui.sticky.whatsapp, lang)}
+  </a>
+</nav>

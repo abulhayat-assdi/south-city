@@ -1,0 +1,22 @@
+---
+import { ui, t, type Lang } from '../i18n/ui';
+import { waLink } from '../content';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<!-- desktop floating WhatsApp button (mobile uses the sticky bar instead) -->
+<a
+  href={waLink(lang)}
+  target="_blank"
+  rel="noopener"
+  class="fab-pulse fixed bottom-6 right-6 z-50 hidden h-14 w-14 items-center justify-center rounded-full bg-whatsapp text-white shadow-lg transition-transform hover:scale-105 md:flex"
+  aria-label={t(ui.sticky.whatsappAria, lang)}
+  data-track="whatsapp_click"
+>
+  <Icon name="whatsapp" class="h-7 w-7" />
+</a>

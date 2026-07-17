@@ -1,0 +1,119 @@
+---
+/** Renders/site-photo gallery with a lightweight <dialog> lightbox (spec §6.11). */
+import { Image, getImage } from 'astro:assets';
+import { ui, t, type Lang } from '../i18n/ui';
+import { galleryCaptions, remoteImages } from '../content';
+import type { L10n } from '../i18n/ui';
+import SectionHeading from './SectionHeading.astro';
+import Icon from './Icon.astro';
+
+import g1 from '../assets/img/gallery-1.webp';
+import g2 from '../assets/img/gallery-2.webp';
+import g3 from '../assets/img/gallery-3.webp';
+import g4 from '../assets/img/gallery-4.webp';
+import g5 from '../assets/img/gallery-5.webp';
+import g6 from '../assets/img/gallery-6.webp';
+
+const localSources = [g1, g2, g3, g4, g5, g6];
+
+// Sanity gallery (if published) replaces the local set — still build-optimized
+const items = remoteImages.gallery?.length
+  ? remoteImages.gallery.map((g, i) => ({
+      src: g.url as string | ImageMetadata,
+      caption: (g.caption as L10n | undefined) ?? galleryCaptions[i % galleryCaptions.length],
+      remote: true,
+    }))
+  : localSources.map((src, i) => ({ src, caption: galleryCaptions[i], remote: false }));
+
+// pre-generate the large lightbox variants at build time
+const large = await Promise.all(
+  items.map((it) =>
+    getImage({
+      src: it.src,
+      ...(it.remote ? { inferSize: true as const } : {}),
+      width: 1200,
+      quality: 75,
+      format: 'webp',
+    })
+  )
+);
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<section id="gallery" class="section-pad bg-bg-soft">
+  <div class="container-c">
+    <SectionHeading
+      eyebrow={t(ui.sections.galleryEyebrow, lang)}
+      title={t(ui.sections.galleryTitle, lang)}
+    />
+
+    <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+      {
+        items.map((it, i) => (
+          <button
+            type="button"
+            class="reveal group relative overflow-hidden rounded-xl border border-line"
+            data-lightbox={large[i].src}
+            data-caption={t(it.caption, lang)}
+            aria-label={t(it.caption, lang)}
+          >
+            <Image
+              src={it.src as ImageMetadata}
+              {...(it.remote ? { inferSize: true } : {})}
+              alt={t(it.caption, lang)}
+              widths={[360, 600, 900]}
+              sizes="(max-width: 639px) 50vw, (max-width: 1023px) 45vw, 380px"
+              quality={70}
+              loading="lazy"
+              class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-deep/85 to-transparent px-3 pb-2.5 pt-8 text-left text-xs font-medium text-white sm:text-sm">
+              {t(it.caption, lang)}
+            </span>
+          </button>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<!-- lightbox -->
+<dialog
+  id="lightbox"
+  class="m-auto w-[min(94vw,1000px)] rounded-xl bg-navy-deep p-0 backdrop:bg-navy-deep/90"
+>
+  <button
+    type="button"
+    id="lightbox-close"
+    class="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-navy/70 text-white hover:text-gold-light"
+    aria-label={lang === 'bn' ? 'বন্ধ করুন' : 'Close'}
+  >
+    <Icon name="x" class="h-6 w-6" />
+  </button>
+  <img id="lightbox-img" src="" alt="" class="h-auto w-full rounded-t-xl" />
+  <p id="lightbox-caption" class="px-4 py-3 text-center text-sm text-white/90"></p>
+</dialog>
+
+<script>
+  const dlg = document.getElementById('lightbox') as HTMLDialogElement | null;
+  if (dlg) {
+    const img = document.getElementById('lightbox-img') as HTMLImageElement;
+    const cap = document.getElementById('lightbox-caption')!;
+    document.querySelectorAll<HTMLElement>('[data-lightbox]').forEach((btn) =>
+      btn.addEventListener('click', () => {
+        img.src = btn.dataset.lightbox!;
+        img.alt = btn.dataset.caption ?? '';
+        cap.textContent = btn.dataset.caption ?? '';
+        dlg.showModal();
+      })
+    );
+    document.getElementById('lightbox-close')?.addEventListener('click', () => dlg.close());
+    dlg.addEventListener('click', (e) => {
+      if (e.target === dlg) dlg.close(); // click on backdrop
+    });
+  }
+</script>

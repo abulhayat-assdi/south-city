@@ -1,0 +1,80 @@
+---
+import { Image } from 'astro:assets';
+import heroImg from '../assets/img/hero.webp';
+import { ui, t, type Lang } from '../i18n/ui';
+import { hero, waLink, remoteImages } from '../content';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+// Sanity-uploaded hero (if any) — still optimized + emitted at build time
+const heroSrc = remoteImages.hero ?? heroImg;
+const remoteProps = typeof heroSrc === 'string' ? { inferSize: true as const } : {};
+---
+
+<section class="relative flex min-h-[calc(100svh-56px)] items-center overflow-hidden bg-navy-deep md:min-h-[calc(100svh-72px)]">
+  <!-- background render (LCP image — eager + high priority) -->
+  <Image
+    src={heroSrc}
+    {...remoteProps}
+    alt=""
+    widths={[480, 768, 1280, 1920]}
+    sizes="100vw"
+    quality={72}
+    loading="eager"
+    fetchpriority="high"
+    class="absolute inset-0 h-full w-full object-cover object-center"
+    aria-hidden="true"
+  />
+  <!-- navy gradient overlay for text legibility -->
+  <div
+    class="absolute inset-0 bg-gradient-to-r from-navy-deep/80 via-navy/55 to-navy-deep/30"
+    aria-hidden="true"
+  >
+  </div>
+
+  <div class="container-c relative z-10 py-16 md:py-24">
+    <p class="eyebrow !text-gold-light">{t(ui.hero.eyebrow, lang)}</p>
+    <h1 class="max-w-3xl !text-white drop-shadow-md">
+      {t(hero.headline, lang)}
+    </h1>
+    <p class="mt-4 max-w-2xl text-lg text-white/90 md:text-xl">
+      {t(hero.subline, lang)}
+    </p>
+
+    <!-- USP chips -->
+    <ul class="mt-6 flex max-w-2xl flex-wrap gap-2" role="list">
+      {
+        hero.chips.map((chip) => (
+          <li class="inline-flex items-center gap-1.5 rounded-full border border-gold/60 bg-navy-deep/50 px-3.5 py-1.5 text-sm font-medium text-gold-light backdrop-blur-sm">
+            <Icon name="check" class="h-3.5 w-3.5" strokeWidth={2.5} />
+            {t(chip, lang)}
+          </li>
+        ))
+      }
+    </ul>
+
+    <!-- dual CTA -->
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
+      <a href={waLink(lang)} target="_blank" rel="noopener" class="btn-wa" data-track="whatsapp_click">
+        <Icon name="whatsapp" class="h-5 w-5" />
+        {t(ui.hero.whatsappUs, lang)}
+      </a>
+      <a href="#contact" class="btn-outline-light">
+        {t(ui.hero.getDetails, lang)}
+      </a>
+    </div>
+  </div>
+
+  <!-- scroll cue -->
+  <a
+    href="#overview"
+    class="absolute bottom-5 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center text-white/70 transition-colors hover:text-gold-light md:flex"
+    aria-label={t(ui.hero.scroll, lang)}
+  >
+    <Icon name="chevron-down" class="h-6 w-6 animate-bounce" />
+  </a>
+</section>

@@ -1,0 +1,116 @@
+---
+/** Neighborhood tabs: Connectivity · Education · Health · Daily Needs (spec §6.9). */
+import { Image } from 'astro:assets';
+import { ui, t, type Lang } from '../i18n/ui';
+import { landmarkTabs } from '../content';
+import SectionHeading from './SectionHeading.astro';
+
+import imgConnectivity from '../assets/img/landmark-connectivity.webp';
+import imgEducation from '../assets/img/landmark-education.webp';
+import imgHealth from '../assets/img/landmark-health.webp';
+import imgDaily from '../assets/img/landmark-daily.webp';
+
+const images = {
+  connectivity: imgConnectivity,
+  education: imgEducation,
+  health: imgHealth,
+  daily: imgDaily,
+} as const;
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const pad = (n: number) => String(n + 1).padStart(2, '0');
+---
+
+<section class="section-pad bg-bg-soft">
+  <div class="container-c">
+    <SectionHeading
+      eyebrow={t(ui.sections.landmarksEyebrow, lang)}
+      title={t(ui.sections.landmarksTitle, lang)}
+    />
+
+    <div class="reveal" data-lm-tabs>
+      <div class="flex flex-wrap gap-2" role="tablist" aria-label={t(ui.sections.landmarksTitle, lang)}>
+        {
+          landmarkTabs.map((tab, i) => (
+            <button
+              type="button"
+              role="tab"
+              id={`lmtab-${tab.id}`}
+              aria-controls={`lmpanel-${tab.id}`}
+              aria-selected={i === 0 ? 'true' : 'false'}
+              tabindex={i === 0 ? 0 : -1}
+              class:list={[
+                'min-h-[44px] rounded-full px-5 py-2 font-display text-sm font-semibold transition-colors sm:text-base',
+                i === 0 ? 'bg-navy text-gold-light' : 'border border-line bg-white text-navy hover:border-gold',
+              ]}
+              data-lmtab={tab.id}
+            >
+              {t(tab.label, lang)}
+            </button>
+          ))
+        }
+      </div>
+
+      {
+        landmarkTabs.map((tab, i) => (
+          <div
+            id={`lmpanel-${tab.id}`}
+            role="tabpanel"
+            aria-labelledby={`lmtab-${tab.id}`}
+            class:list={['mt-6 grid items-start gap-6 md:grid-cols-2', i > 0 && 'hidden']}
+            data-lmpanel={tab.id}
+          >
+            <ol class="divide-y divide-line rounded-xl border border-line bg-white px-5">
+              {tab.items.map((item, j) => (
+                <li class="flex items-baseline gap-4 py-4">
+                  <span class="font-display text-sm font-bold text-gold" aria-hidden="true">
+                    {pad(j)}
+                  </span>
+                  <div>
+                    <p class="font-semibold text-navy">{t(item.name, lang)}</p>
+                    <p class="text-sm text-muted">{t(item.note, lang)}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <Image
+              src={images[tab.image]}
+              alt={t(tab.label, lang)}
+              widths={[480, 900]}
+              sizes="(max-width: 767px) 100vw, 580px"
+              quality={72}
+              loading="lazy"
+              class="h-auto w-full rounded-xl border border-line"
+            />
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-lm-tabs]');
+  if (root) {
+    const tabs = root.querySelectorAll<HTMLButtonElement>('[data-lmtab]');
+    const panels = root.querySelectorAll<HTMLElement>('[data-lmpanel]');
+    const activate = (id: string) => {
+      panels.forEach((p) => p.classList.toggle('hidden', p.dataset.lmpanel !== id));
+      tabs.forEach((b) => {
+        const on = b.dataset.lmtab === id;
+        b.setAttribute('aria-selected', String(on));
+        b.tabIndex = on ? 0 : -1;
+        b.classList.toggle('bg-navy', on);
+        b.classList.toggle('text-gold-light', on);
+        b.classList.toggle('border', !on);
+        b.classList.toggle('border-line', !on);
+        b.classList.toggle('bg-white', !on);
+        b.classList.toggle('text-navy', !on);
+      });
+    };
+    tabs.forEach((b) => b.addEventListener('click', () => activate(b.dataset.lmtab!)));
+  }
+</script>

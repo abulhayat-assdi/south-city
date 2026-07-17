@@ -1,0 +1,87 @@
+---
+import { ui, t, type Lang } from '../i18n/ui';
+import { overview } from '../content';
+import SectionHeading from './SectionHeading.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<section id="overview" class="section-pad bg-white">
+  <div class="container-c">
+    <div class="grid gap-10 lg:grid-cols-2 lg:gap-16">
+      <div>
+        <SectionHeading
+          eyebrow={t(ui.sections.overviewEyebrow, lang)}
+          title={t(ui.sections.overviewTitle, lang)}
+        />
+        <p class="reveal max-w-prose text-[17px] leading-relaxed text-muted">
+          {t(overview.paragraph, lang)}
+        </p>
+      </div>
+
+      <!-- animated counters -->
+      <div class="grid grid-cols-2 content-center gap-4 sm:gap-6">
+        {
+          overview.counters.map((c) => (
+            <div class="reveal card flex flex-col items-center justify-center px-4 py-7 text-center">
+              <span
+                class="counter font-display text-3xl font-extrabold text-navy sm:text-4xl"
+                data-end={c.end ?? ''}
+                data-final={t(c.display, lang)}
+                data-bn={lang === 'bn' ? '1' : ''}
+              >
+                {t(c.display, lang)}
+              </span>
+              <span class="mt-2 h-0.5 w-8 bg-gold" aria-hidden="true" />
+              <span class="mt-2 text-sm font-medium text-muted">{t(c.label, lang)}</span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // count-up animation when counters scroll into view (Bangla numerals aware)
+  const toBn = (s: string) =>
+    s.replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[Number(d)]);
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const animate = (el: HTMLElement) => {
+    const end = Number(el.dataset.end);
+    const final = el.dataset.final ?? '';
+    if (!el.dataset.end || Number.isNaN(end) || reduce) {
+      el.textContent = final;
+      return;
+    }
+    const bn = el.dataset.bn === '1';
+    const dur = 1400;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const v = String(Math.round(end * eased));
+      el.textContent = bn ? toBn(v) : v;
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = final; // restore suffixes like "+" or "%"
+    };
+    requestAnimationFrame(tick);
+  };
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const en of entries) {
+        if (en.isIntersecting) {
+          animate(en.target as HTMLElement);
+          io.unobserve(en.target);
+        }
+      }
+    },
+    { threshold: 0.4 }
+  );
+  document.querySelectorAll<HTMLElement>('.counter').forEach((el) => io.observe(el));
+</script>

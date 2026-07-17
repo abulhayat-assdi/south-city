@@ -1,0 +1,139 @@
+---
+import { ui, t, type Lang } from '../i18n/ui';
+import { settings, waLink } from '../content';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+const quickLinks = [
+  { href: '#overview', label: ui.nav.overview },
+  { href: '#master-plan', label: ui.nav.masterplan },
+  { href: '#plots', label: ui.nav.plots },
+  { href: '#location', label: ui.nav.location },
+  { href: '#amenities', label: ui.nav.amenities },
+  { href: '#contact', label: ui.nav.contact },
+];
+const socials = [
+  { icon: 'facebook', href: settings.social.facebook, label: 'Facebook' },
+  { icon: 'youtube', href: settings.social.youtube, label: 'YouTube' },
+  { icon: 'linkedin', href: settings.social.linkedin, label: 'LinkedIn' },
+];
+---
+
+<footer class="bg-navy-deep text-white">
+  <div class="container-c grid gap-10 py-14 md:grid-cols-3 md:gap-8">
+    <!-- brand -->
+    <div>
+      <div class="flex items-center gap-3">
+        <svg viewBox="0 0 48 48" class="h-12 w-12" aria-hidden="true">
+          <circle cx="24" cy="24" r="22" fill="#0E1A44"></circle>
+          <circle cx="24" cy="24" r="22" fill="none" stroke="#C9A227" stroke-width="2.5"></circle>
+          <text
+            x="24"
+            y="31"
+            text-anchor="middle"
+            font-family="Georgia, serif"
+            font-size="17"
+            font-weight="700"
+            fill="#E2C56B">SD</text
+          >
+        </svg>
+        <div class="font-display leading-tight">
+          <p class="text-xl font-extrabold tracking-wide text-white">SOUTH CITY</p>
+          <p class="text-xs font-medium text-gold-light">{t(settings.companyName, lang)}</p>
+        </div>
+      </div>
+      <p class="mt-4 font-display text-sm font-semibold italic text-gold-light">
+        “{t(ui.footer.tagline, lang)}”
+      </p>
+    </div>
+
+    <!-- contact -->
+    <div>
+      <h3 class="font-display text-lg font-bold !text-white">{t(ui.footer.contact, lang)}</h3>
+      <ul class="mt-4 space-y-3 text-white/85" role="list">
+        <li class="flex items-start gap-3">
+          <Icon name="map-pin" class="mt-1 h-5 w-5 shrink-0 text-gold" />
+          <span>
+            <span class="block text-xs font-semibold uppercase tracking-wide text-gold-light">
+              {t(ui.footer.office, lang)}
+            </span>
+            {t(settings.address, lang)}
+          </span>
+        </li>
+        <li>
+          <a
+            href={`tel:${settings.phone}`}
+            class="flex min-h-[44px] items-center gap-3 hover:text-gold-light"
+            data-track="call_click"
+          >
+            <Icon name="phone" class="h-5 w-5 shrink-0 text-gold" />
+            {settings.phoneDisplay}
+          </a>
+        </li>
+        <li>
+          <a
+            href={`mailto:${settings.email}`}
+            class="flex min-h-[44px] items-center gap-3 break-all hover:text-gold-light"
+          >
+            <Icon name="mail" class="h-5 w-5 shrink-0 text-gold" />
+            {settings.email}
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- quick links + socials -->
+    <div>
+      <h3 class="font-display text-lg font-bold !text-white">{t(ui.footer.quickLinks, lang)}</h3>
+      <ul class="mt-4 grid grid-cols-2 gap-x-4" role="list">
+        {
+          quickLinks.map((l) => (
+            <li>
+              <a
+                href={l.href}
+                class="flex min-h-[40px] items-center text-white/85 transition-colors hover:text-gold-light"
+              >
+                {t(l.label, lang)}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="mt-5 flex gap-3">
+        {
+          socials.map((s) => (
+            <a
+              href={s.href}
+              target="_blank"
+              rel="noopener"
+              aria-label={s.label}
+              class="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-white/85 transition-colors hover:border-gold hover:text-gold-light"
+            >
+              <Icon name={s.icon} class="h-5 w-5" />
+            </a>
+          ))
+        }
+        <a
+          href={waLink(lang)}
+          target="_blank"
+          rel="noopener"
+          aria-label="WhatsApp"
+          class="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-white/85 transition-colors hover:border-whatsapp hover:text-whatsapp"
+          data-track="whatsapp_click"
+        >
+          <Icon name="whatsapp" class="h-5 w-5" />
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t border-white/10">
+    <p class="container-c py-5 text-center text-sm text-white/60">
+      {t(ui.footer.copyright, lang)}
+    </p>
+  </div>
+</footer>

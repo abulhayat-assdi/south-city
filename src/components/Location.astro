@@ -1,0 +1,104 @@
+---
+import { ui, t, type Lang } from '../i18n/ui';
+import { distances, boundaries, settings } from '../content';
+import SectionHeading from './SectionHeading.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent(settings.mapQuery)}&z=13&output=embed`;
+---
+
+<section id="location" class="section-pad bg-white">
+  <div class="container-c">
+    <SectionHeading
+      eyebrow={t(ui.sections.locationEyebrow, lang)}
+      title={t(ui.sections.locationTitle, lang)}
+    />
+
+    <div class="grid gap-8 lg:grid-cols-2">
+      <!-- lazy Google Map: loads on scroll-into-view or button tap (spec §6.8) -->
+      <div
+        id="map-shell"
+        class="reveal relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-xl border border-line bg-bg-soft lg:min-h-[420px]"
+        data-map-src={mapSrc}
+      >
+        <button type="button" id="map-load" class="btn-outline z-10">
+          <Icon name="map-pin" class="h-5 w-5 text-gold" />
+          {t(ui.location.showMap, lang)}
+        </button>
+        <p class="absolute bottom-4 px-4 text-center text-xs text-muted">
+          Sayedpur, South Keraniganj, Dhaka
+        </p>
+      </div>
+
+      <!-- distance chart + boundaries -->
+      <div>
+        <h3 class="reveal font-display text-xl font-bold text-navy">
+          {t(ui.location.distancesTitle, lang)}
+        </h3>
+        <ul class="mt-4 divide-y divide-line" role="list">
+          {
+            distances.map((d) => (
+              <li class="reveal flex items-center justify-between gap-4 py-3.5">
+                <span class="flex items-center gap-3 font-medium text-ink">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold">
+                    <Icon name="map-pin" class="h-[18px] w-[18px]" />
+                  </span>
+                  {t(d.place, lang)}
+                </span>
+                <span class="font-display text-lg font-bold text-navy">{t(d.value, lang)}</span>
+              </li>
+            ))
+          }
+        </ul>
+
+        <p class="reveal mt-6 rounded-lg bg-bg-soft p-4 text-sm leading-relaxed text-muted">
+          <span class="mb-1 block font-semibold text-navy">{t(ui.location.boundaries, lang)}:</span>
+          {
+            boundaries.map((b, i) => (
+              <span>
+                {t(b.side, lang)} — {t(b.value, lang)}{i < boundaries.length - 1 ? ' · ' : ''}
+              </span>
+            ))
+          }
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const shell = document.getElementById('map-shell');
+  if (shell) {
+    let loaded = false;
+    const load = () => {
+      if (loaded) return;
+      loaded = true;
+      const iframe = document.createElement('iframe');
+      iframe.src = shell.dataset.mapSrc!;
+      iframe.title = document.documentElement.lang === 'bn'
+        ? 'সাউথ সিটি প্রকল্পের লোকেশন ম্যাপ'
+        : 'South City project location map';
+      iframe.loading = 'lazy';
+      iframe.referrerPolicy = 'no-referrer-when-downgrade';
+      iframe.className = 'absolute inset-0 h-full w-full border-0';
+      iframe.setAttribute('allowfullscreen', '');
+      shell.appendChild(iframe);
+      document.getElementById('map-load')?.remove();
+    };
+    document.getElementById('map-load')?.addEventListener('click', load);
+    new IntersectionObserver(
+      (entries, io) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          load();
+          io.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    ).observe(shell);
+  }
+</script>

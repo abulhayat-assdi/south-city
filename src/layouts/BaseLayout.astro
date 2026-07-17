@@ -1,0 +1,129 @@
+---
+import '../styles/global.css';
+import { ui, t, type Lang } from '../i18n/ui';
+import { settings } from '../content';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+const title = t(ui.meta.title, lang);
+const description = t(ui.meta.description, lang);
+const site = Astro.site ?? new URL('https://southcity.pages.dev');
+const canonical = new URL(lang === 'bn' ? '/' : '/en/', site);
+const ogImage = new URL('/og-image.png', site);
+
+// Google Fonts: Latin display/body + Bengali display/body, swap for fast text
+const fontsHref =
+  'https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&family=Hind+Siliguri:wght@500;600;700&family=Noto+Sans+Bengali:wght@400;500;600&display=swap';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'RealEstateAgent',
+  name: 'South City — ' + settings.companyName.en,
+  description,
+  url: canonical.href,
+  telephone: settings.phone,
+  email: settings.email,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: settings.address.en,
+    addressLocality: 'Dhaka',
+    addressCountry: 'BD',
+  },
+  areaServed: 'Sayedpur, South Keraniganj, Dhaka',
+  image: ogImage.href,
+};
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical.href} />
+    <link rel="alternate" hreflang="bn" href={new URL('/', site).href} />
+    <link rel="alternate" hreflang="en" href={new URL('/en/', site).href} />
+    <link rel="alternate" hreflang="x-default" href={new URL('/', site).href} />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#14245C" />
+
+    <!-- Open Graph / social share -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:image" content={ogImage.href} />
+    <meta property="og:locale" content={lang === 'bn' ? 'bn_BD' : 'en_US'} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href={fontsHref} />
+
+    <!-- remember the visitor's language choice; honor it on the landing URL -->
+    <script is:inline>
+      (function () {
+        try {
+          var pref = localStorage.getItem('sc-lang');
+          var here = document.documentElement.lang;
+          if (pref && pref !== here && !sessionStorage.getItem('sc-lang-nav')) {
+            location.replace(pref === 'en' ? '/en/' : '/');
+          }
+          sessionStorage.setItem('sc-lang-nav', '1');
+        } catch (e) {}
+      })();
+    </script>
+
+    <!--
+      🔴 Analytics placeholders — paste real IDs before launch:
+      GA4:  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+      Meta Pixel: standard fbq snippet with the pixel ID.
+      Conversion events (call_click / whatsapp_click / form_submit) are already
+      fired via data-track attributes — see the tracking script below.
+    -->
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body class="pb-14 md:pb-0">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-navy focus:px-4 focus:py-2 focus:text-white"
+      >{t(ui.skipToContent, lang)}</a
+    >
+    <slot />
+
+    <script>
+      // ---- conversion event tracking (GA4 + Meta Pixel, if present) ----
+      document.addEventListener('click', (e) => {
+        const el = (e.target as HTMLElement).closest<HTMLElement>('[data-track]');
+        if (!el) return;
+        const ev = el.dataset.track!;
+        const w = window as any;
+        if (typeof w.gtag === 'function') w.gtag('event', ev);
+        if (typeof w.fbq === 'function') w.fbq('trackCustom', ev);
+      });
+
+      // ---- scroll-reveal animation ----
+      const revealIo = new IntersectionObserver(
+        (entries) => {
+          for (const en of entries) {
+            if (en.isIntersecting) {
+              en.target.classList.add('in-view');
+              revealIo.unobserve(en.target);
+            }
+          }
+        },
+        { threshold: 0.15 }
+      );
+      document.querySelectorAll('.reveal').forEach((el) => revealIo.observe(el));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,195 @@
+---
+/**
+ * Plot sizes & pricing — Aroland's floorplan tabs repurposed.
+ * ≥640px: horizontal tabs · <640px: accordion (spec §6.7).
+ */
+import { ui, t, type Lang } from '../i18n/ui';
+import { plots, waLink } from '../content';
+import SectionHeading from './SectionHeading.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<section id="plots" class="section-pad bg-bg-soft">
+  <div class="container-c">
+    <SectionHeading
+      eyebrow={t(ui.sections.plotsEyebrow, lang)}
+      title={t(ui.sections.plotsTitle, lang)}
+    >
+      <p class="mt-3 text-sm text-muted">{t(ui.sections.plotsNote, lang)}</p>
+    </SectionHeading>
+
+    <div class="reveal" data-tabs>
+      <!-- desktop/tablet tab list -->
+      <div class="hidden gap-2 sm:flex" role="tablist" aria-label={t(ui.sections.plotsTitle, lang)}>
+        {
+          plots.map((p, i) => (
+            <button
+              type="button"
+              role="tab"
+              id={`tab-${p.id}`}
+              aria-controls={`panel-${p.id}`}
+              aria-selected={i === 0 ? 'true' : 'false'}
+              tabindex={i === 0 ? 0 : -1}
+              class:list={[
+                'min-h-[48px] rounded-t-lg px-6 py-3 font-display text-base font-semibold transition-colors',
+                i === 0
+                  ? 'bg-navy text-gold-light'
+                  : 'bg-white text-navy hover:bg-navy/5 border border-b-0 border-line',
+              ]}
+              data-tab={p.id}
+            >
+              {t(p.katha, lang)}
+            </button>
+          ))
+        }
+      </div>
+
+      {
+        plots.map((p, i) => (
+          <div class="sm:contents">
+            <!-- mobile accordion header -->
+            <button
+              type="button"
+              class:list={[
+                'flex w-full items-center justify-between rounded-lg border border-line bg-white px-4 py-3.5 font-display text-base font-semibold text-navy sm:hidden',
+                i > 0 && 'mt-3',
+              ]}
+              data-acc={p.id}
+              aria-expanded={i === 0 ? 'true' : 'false'}
+              aria-controls={`panel-${p.id}`}
+            >
+              {t(p.katha, lang)}
+              <Icon name="chevron-down" class="acc-chevron h-5 w-5 text-gold transition-transform" />
+            </button>
+
+            <div
+              id={`panel-${p.id}`}
+              role="tabpanel"
+              aria-labelledby={`tab-${p.id}`}
+              class:list={[
+                'rounded-b-xl rounded-tr-xl border border-line bg-white p-5 sm:p-8',
+                i > 0 && 'hidden',
+              ]}
+              data-panel={p.id}
+            >
+              <div class="grid gap-6 md:grid-cols-[1fr_auto]">
+                <div class="grid gap-4 sm:grid-cols-2">
+                  <div class="rounded-lg bg-bg-soft p-4">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-muted">
+                      {t(ui.plots.area, lang)}
+                    </p>
+                    <p class="mt-1 font-display text-xl font-bold text-navy">
+                      {t(p.katha, lang)} <span class="text-base font-medium text-muted">· {t(p.sqft, lang)}</span>
+                    </p>
+                  </div>
+                  <div class="rounded-lg bg-bg-soft p-4">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-muted">
+                      {t(ui.plots.dimensions, lang)}
+                    </p>
+                    <p class="mt-1 font-display text-xl font-bold text-navy">{t(p.dimensions, lang)}</p>
+                  </div>
+                  <div class="rounded-lg bg-bg-soft p-4">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-muted">
+                      {t(ui.plots.price, lang)}
+                    </p>
+                    <p class="mt-1 font-display text-xl font-bold text-gold">
+                      {p.price ? t(p.price, lang) : t(ui.plots.callForPrice, lang)}
+                    </p>
+                  </div>
+                  <div class="rounded-lg bg-bg-soft p-4">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-muted">
+                      {t(ui.plots.booking, lang)}
+                    </p>
+                    <p class="mt-1 font-display text-xl font-bold text-navy">{t(p.booking, lang)}</p>
+                  </div>
+                </div>
+
+                <div class="flex flex-col justify-between gap-4 md:max-w-xs">
+                  <p class="rounded-lg border border-gold/40 bg-gold/10 p-4 text-sm text-ink">
+                    <span class="mb-1 block font-semibold text-navy">
+                      {t(ui.plots.installment, lang)}
+                    </span>
+                    {t(p.installment, lang)}
+                  </p>
+                  <a
+                    href={waLink(
+                      lang,
+                      lang === 'bn'
+                        ? `আসসালামু আলাইকুম, আমি সাউথ সিটির ${p.katha.bn} প্লট রিজার্ভ করতে আগ্রহী।`
+                        : `Assalamu Alaikum, I'd like to reserve a ${p.katha.en} plot at South City.`
+                    )}
+                    target="_blank"
+                    rel="noopener"
+                    class="btn-gold w-full"
+                    data-track="whatsapp_click"
+                  >
+                    {t(ui.plots.reserve, lang)}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-tabs]');
+  if (root) {
+    const tabs = root.querySelectorAll<HTMLButtonElement>('[data-tab]');
+    const accs = root.querySelectorAll<HTMLButtonElement>('[data-acc]');
+    const panels = root.querySelectorAll<HTMLElement>('[data-panel]');
+    const isMobile = () => window.matchMedia('(max-width: 639px)').matches;
+
+    const activate = (id: string, toggle = false) => {
+      panels.forEach((p) => {
+        const on = p.dataset.panel === id;
+        if (toggle && isMobile() && on && !p.classList.contains('hidden')) {
+          p.classList.add('hidden'); // collapse the open accordion item
+        } else {
+          p.classList.toggle('hidden', !on);
+        }
+      });
+      tabs.forEach((b) => {
+        const on = b.dataset.tab === id;
+        b.setAttribute('aria-selected', String(on));
+        b.tabIndex = on ? 0 : -1;
+        b.classList.toggle('bg-navy', on);
+        b.classList.toggle('text-gold-light', on);
+        b.classList.toggle('bg-white', !on);
+        b.classList.toggle('text-navy', !on);
+        b.classList.toggle('border', !on);
+        b.classList.toggle('border-b-0', !on);
+        b.classList.toggle('border-line', !on);
+      });
+      accs.forEach((b) => {
+        const open = !document
+          .getElementById(`panel-${b.dataset.acc}`)!
+          .classList.contains('hidden');
+        b.setAttribute('aria-expanded', String(open));
+        b.querySelector('.acc-chevron')?.classList.toggle('rotate-180', open);
+      });
+    };
+
+    tabs.forEach((b) => b.addEventListener('click', () => activate(b.dataset.tab!)));
+    accs.forEach((b) => b.addEventListener('click', () => activate(b.dataset.acc!, true)));
+
+    // arrow-key support on the tablist
+    root.querySelector('[role="tablist"]')?.addEventListener('keydown', (e) => {
+      const ev = e as KeyboardEvent;
+      if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+      const list = [...tabs];
+      const cur = list.findIndex((b) => b.getAttribute('aria-selected') === 'true');
+      const next = (cur + (ev.key === 'ArrowRight' ? 1 : -1) + list.length) % list.length;
+      activate(list[next].dataset.tab!);
+      list[next].focus();
+    });
+  }
+</script>

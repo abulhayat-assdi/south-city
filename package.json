@@ -1,0 +1,21 @@
+{
+  "name": "south-city",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "South City — planned residential & commercial plots in Sayedpur, South Keraniganj, Dhaka. A project of South Dhaka Properties & Housing Ltd.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "assets": "node scripts/generate-assets.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.3",
+    "@astrojs/tailwind": "^6.0.2",
+    "astro": "^5.12.0",
+    "tailwindcss": "^3.4.17"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.5"
+  }
+}

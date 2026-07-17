@@ -1,0 +1,45 @@
+---
+/** The full single-scroll landing page, shared by / (bn) and /en/ (en). */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from './Header.astro';
+import Hero from './Hero.astro';
+import Overview from './Overview.astro';
+import TrustRow from './TrustRow.astro';
+import Facts from './Facts.astro';
+import MasterPlan from './MasterPlan.astro';
+import PlotTabs from './PlotTabs.astro';
+import Location from './Location.astro';
+import Landmarks from './Landmarks.astro';
+import Amenities from './Amenities.astro';
+import Gallery from './Gallery.astro';
+import LeadForm from './LeadForm.astro';
+import Footer from './Footer.astro';
+import StickyBar from './StickyBar.astro';
+import WhatsAppFab from './WhatsAppFab.astro';
+import type { Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<BaseLayout lang={lang}>
+  <Header lang={lang} />
+  <main id="main">
+    <Hero lang={lang} />
+    <Overview lang={lang} />
+    <TrustRow lang={lang} />
+    <Facts lang={lang} />
+    <MasterPlan lang={lang} />
+    <PlotTabs lang={lang} />
+    <Location lang={lang} />
+    <Landmarks lang={lang} />
+    <Amenities lang={lang} />
+    <Gallery lang={lang} />
+    <LeadForm lang={lang} />
+  </main>
+  <Footer lang={lang} />
+  <StickyBar lang={lang} />
+  <WhatsAppFab lang={lang} />
+</BaseLayout>
