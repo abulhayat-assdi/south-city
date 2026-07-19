@@ -1,0 +1,288 @@
+// South City ERP — Prisma schema (spec §4).
+// Money is ALWAYS Decimal(14,2) BDT. Never Float.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  CUSTOMER
+}
+
+enum PlotStatus {
+  AVAILABLE
+  RESERVED
+  BOOKED
+  SOLD
+}
+
+enum PlotCategory {
+  RESIDENTIAL
+  COMMERCIAL
+}
+
+enum PaymentType {
+  FULL
+  INSTALLMENT
+}
+
+enum SaleStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum InstallmentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CHEQUE
+  BKASH
+  NAGAD
+  OTHER
+}
+
+enum DocumentType {
+  NID
+  PHOTO
+  SIGNATURE
+  AGREEMENT
+  DEED
+  MONEY_RECEIPT
+  OTHER
+}
+
+enum EnquiryStatus {
+  NEW
+  CONTACTED
+  CONVERTED
+  CLOSED
+}
+
+model User {
+  id                 String     @id @default(cuid())
+  name               String
+  email              String     @unique
+  phone              String?
+  passwordHash       String
+  role               Role       @default(CUSTOMER)
+  isActive           Boolean    @default(true)
+  mustChangePassword Boolean    @default(true) // admin-created accounts
+  failedLoginCount   Int        @default(0)
+  lockedUntil        DateTime?
+  lastLoginAt        DateTime?
+  customer           Customer?
+  payments           Payment[]  @relation("RecordedBy")
+  auditLogs          AuditLog[]
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+}
+
+model Customer {
+  id           String  @id @default(cuid())
+  customerCode String  @unique // e.g. SC-0001
+  userId       String? @unique // login account (created by admin)
+  user         User?   @relation(fields: [userId], references: [id])
+
+  // --- data from the hard-copy purchase form (§8) ---
+  fullNameEn       String
+  fullNameBn       String?
+  fatherName       String?
+  motherName       String?
+  spouseName       String?
+  nidNumber        String?
+  dateOfBirth      DateTime?
+  occupation       String?
+  nationality      String?   @default("Bangladeshi")
+  phonePrimary     String
+  phoneSecondary   String?
+  email            String?
+  presentAddress   String?
+  permanentAddress String?
+
+  // nominee
+  nomineeName     String?
+  nomineeRelation String?
+  nomineeNid      String?
+  nomineePhone    String?
+  nomineeAddress  String?
+
+  photoUrl     String?
+  signatureUrl String?
+  notes        String?
+
+  sales     Sale[]
+  documents Document[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([fullNameEn])
+  @@index([phonePrimary])
+}
+
+model Plot {
+  id            String       @id @default(cuid())
+  sector        String // A | B | C | D
+  plotNumber    String
+  sizeKatha     Decimal      @db.Decimal(6, 2) // 3, 5, 10
+  category      PlotCategory @default(RESIDENTIAL)
+  roadWidthFt   Int? // 25 | 40 | 60
+  dimensions    String? // e.g. "40ft x 45ft"
+  faceDirection String?
+  status        PlotStatus   @default(AVAILABLE)
+  basePrice     Decimal?     @db.Decimal(14, 2) // indicative; actual price is per-sale
+  remarks       String?
+  sales         Sale[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([sector, plotNumber])
+  @@index([status, sizeKatha, sector])
+}
+
+model Sale {
+  id         String   @id @default(cuid())
+  saleCode   String   @unique // e.g. SALE-2026-0001
+  plotId     String
+  plot       Plot     @relation(fields: [plotId], references: [id])
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  salePrice            Decimal     @db.Decimal(14, 2) // negotiated per customer
+  downPayment          Decimal     @default(0) @db.Decimal(14, 2)
+  paymentType          PaymentType
+  installmentCount     Int? // e.g. 60 months
+  installmentStartDate DateTime?
+  bookingDate          DateTime
+  status               SaleStatus  @default(ACTIVE)
+  notes                String?
+
+  installments Installment[]
+  payments     Payment[]
+  documents    Document[]
+  createdById  String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([customerId, status])
+}
+
+model Installment {
+  id            String            @id @default(cuid())
+  saleId        String
+  sale          Sale              @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  installmentNo Int
+  dueDate       DateTime
+  amountDue     Decimal           @db.Decimal(14, 2)
+  amountPaid    Decimal           @default(0) @db.Decimal(14, 2)
+  status        InstallmentStatus @default(PENDING)
+  payments      Payment[]
+
+  @@unique([saleId, installmentNo])
+  @@index([dueDate, status])
+}
+
+model Payment {
+  id            String       @id @default(cuid())
+  receiptNo     String       @unique // e.g. RCP-2026-000123
+  saleId        String
+  sale          Sale         @relation(fields: [saleId], references: [id])
+  installmentId String?
+  installment   Installment? @relation(fields: [installmentId], references: [id])
+  amount        Decimal      @db.Decimal(14, 2)
+  paymentDate   DateTime
+  method        PaymentMethod
+  referenceNo   String? // cheque/trx id
+  note          String?
+
+  // payments are never hard-deleted — void with a reason instead
+  isVoided   Boolean   @default(false)
+  voidReason String?
+  voidedAt   DateTime?
+  voidedById String?
+
+  recordedById String
+  recordedBy   User     @relation("RecordedBy", fields: [recordedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([saleId, paymentDate])
+}
+
+model Document {
+  id           String       @id @default(cuid())
+  type         DocumentType
+  fileUrl      String // stored path under UPLOAD_DIR — served via auth-checked route
+  fileName     String
+  mimeType     String?
+  sizeBytes    Int?
+  customerId   String?
+  customer     Customer?    @relation(fields: [customerId], references: [id])
+  saleId       String?
+  sale         Sale?        @relation(fields: [saleId], references: [id])
+  uploadedById String
+  createdAt    DateTime     @default(now())
+
+  @@index([customerId])
+  @@index([saleId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String // CREATE_SALE, RECORD_PAYMENT, VOID_PAYMENT, ...
+  entity    String // Sale, Payment, Customer, Plot, User
+  entityId  String
+  before    Json?
+  after     Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+/// Public lead-form enquiry — separate from Customer; admin can convert (§11).
+model Enquiry {
+  id          String        @id @default(cuid())
+  name        String
+  phone       String
+  email       String?
+  message     String?
+  preferredSize String?     // "3" | "5" | "10"
+  source      String? // "public-lead-form"
+  status      EnquiryStatus @default(NEW)
+  createdAt   DateTime      @default(now())
+
+  @@index([status, createdAt])
+}
+
+// --- public site content, editable from admin (replaces the CMS) ---
+model SiteSetting {
+  key       String   @id // hero.title, contact.phone, brochure.pdf ...
+  valueEn   String?
+  valueBn   String?
+  updatedAt DateTime @updatedAt
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  url       String
+  fileName  String
+  altEn     String?
+  altBn     String?
+  createdAt DateTime @default(now())
+}

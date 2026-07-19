@@ -1,0 +1,19 @@
+# Local development database only (spec §15.3 is the production stack).
+# Start with:  npm run db:up      Stop with:  npm run db:down
+# Postgres is published on host port 5433 to avoid clashing with any local 5432.
+services:
+  db:
+    image: postgres:16
+    container_name: southcity-dev-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: southcity
+      POSTGRES_PASSWORD: southcity
+      POSTGRES_DB: southcity
+    ports:
+      - '5433:5432'
+    volumes:
+      - southcity_dev_pgdata:/var/lib/postgresql/data
+
+volumes:
+  southcity_dev_pgdata: {}

@@ -1,0 +1,29 @@
+{
+  "common": {
+    "brand": "South City",
+    "login": "Login",
+    "logout": "Logout",
+    "loading": "Loading…"
+  },
+  "auth": {
+    "signInTitle": "South City — Sign in",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "invalid": "Invalid email or password",
+    "changePasswordTitle": "Set a new password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "save": "Save"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "plots": "Plots",
+    "customers": "Customers",
+    "sales": "Sales",
+    "payments": "Payments",
+    "reports": "Reports",
+    "users": "Users",
+    "siteContent": "Site content"
+  }
+}

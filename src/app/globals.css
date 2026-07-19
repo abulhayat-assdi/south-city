@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* shadcn/ui semantic tokens, tuned to the South City navy/gold brand */
+    --background: 0 0% 100%;
+    --foreground: 220 40% 16%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 40% 16%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 40% 16%;
+    /* primary = navy #14245C */
+    --primary: 226 63% 22%;
+    --primary-foreground: 0 0% 100%;
+    /* secondary = soft bg */
+    --secondary: 222 20% 97%;
+    --secondary-foreground: 220 40% 16%;
+    --muted: 222 20% 96%;
+    --muted-foreground: 217 12% 40%;
+    /* accent = gold #C9A227 */
+    --accent: 45 68% 47%;
+    --accent-foreground: 226 63% 15%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 20% 91%;
+    --input: 222 20% 91%;
+    --ring: 226 63% 22%;
+    --radius: 0.625rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display text-navy;
+  }
+
+  /* Bangla reads better with more line spacing (spec §11). */
+  [lang='bn'] {
+    line-height: 1.75;
+  }
+}
+
+@layer utilities {
+  .container-content {
+    @apply mx-auto w-full max-w-content px-4 sm:px-6;
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "common": {
+    "brand": "সাউথ সিটি",
+    "login": "লগইন",
+    "logout": "লগআউট",
+    "loading": "লোড হচ্ছে…"
+  },
+  "auth": {
+    "signInTitle": "সাউথ সিটি — লগইন",
+    "email": "ইমেইল",
+    "password": "পাসওয়ার্ড",
+    "signIn": "লগইন করুন",
+    "invalid": "ইমেইল বা পাসওয়ার্ড সঠিক নয়",
+    "changePasswordTitle": "নতুন পাসওয়ার্ড সেট করুন",
+    "newPassword": "নতুন পাসওয়ার্ড",
+    "confirmPassword": "পাসওয়ার্ড নিশ্চিত করুন",
+    "save": "সংরক্ষণ করুন"
+  },
+  "nav": {
+    "dashboard": "ড্যাশবোর্ড",
+    "plots": "প্লট",
+    "customers": "কাস্টমার",
+    "sales": "বিক্রয়",
+    "payments": "পেমেন্ট",
+    "reports": "রিপোর্ট",
+    "users": "ইউজার",
+    "siteContent": "সাইট কনটেন্ট"
+  }
+}

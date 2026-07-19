@@ -1,3 +1,8 @@
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
 # build output
 dist/
 .astro/
@@ -10,12 +15,22 @@ node_modules/
 .env.*
 !.env.example
 
+# prisma
+/prisma/*.db
+
+# uploads (documents & media live on a mounted volume in prod)
+/uploads/*
+!/uploads/.gitkeep
+
+# testing
+/coverage/
+
 # OS / editor
 .DS_Store
 Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 
-# sanity
-sanity/node_modules/
-sanity/dist/
+# legacy
+legacy-astro/node_modules/
+legacy-astro/dist/
