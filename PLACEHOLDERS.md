@@ -1,52 +1,87 @@
-# 🔴 Placeholders to replace before launch
+# 🔴 Placeholders to confirm before launch
 
-Everything below is a stand-in (per spec §10 — unconfirmed items). Replace the
-value, rebuild (or publish via Sanity once connected), and it goes live.
+Everything below is a stand-in for a spec §21 item the owner had not yet confirmed.
+Most are **editable from the admin panel** — no code change and no redeploy needed.
 
-## Contact & identity (in `src/content/site.ts` → `settings`)
+---
 
-| Item | Placeholder used | Where it appears |
+## 1. Company contact & identity — edit in **Admin → Content**
+
+Stored in the `CompanyProfile` row; seeded by `prisma/seed.ts` (lines ~181–188).
+
+| Item | Placeholder used | Appears on |
 |---|---|---|
-| Sales phone | `+8801862534626` / display `01862-534626` | Header "Call Now", sticky bar Call, footer, lead-form success card, JSON-LD |
-| WhatsApp number | `8801862534626` | Every WhatsApp button (hero, sticky bar, FAB, plot "Reserve", master-plan card, form fallback, footer) |
-| Public email | `contact.southcity2020@gmail.com` | Footer, JSON-LD |
-| Office address | "Rahman Chamber (Level 4), Motijheel C/A, Dhaka-1000" (EN+BN) | Footer, JSON-LD |
-| Company legal name | "South Dhaka Properties & Housing Ltd." (brochure version) | Header sub-line, footer, facts block, copyright |
-| Social links | Bare `facebook.com` / `youtube.com` / `linkedin.com` | Footer icons |
+| Phone | `+8801862534626` | Header "Call now", sticky mobile bar, footer, contact page, **money receipts** |
+| Email | `info@southdhaka.com.bd` | Footer, contact page |
+| Office address | `Rahman Chamber, Motijheel C/A, Dhaka-1000` (EN + BN) | Footer, contact page, **money receipts** |
+| WhatsApp number | `8801862534626` (also `NEXT_PUBLIC_WHATSAPP` in `.env`) | Every WhatsApp button + floating FAB |
+| Facebook / YouTube / LinkedIn | bare `facebook.com` / `youtube.com` / `linkedin.com` | Footer social icons |
 
-## Commerce
+> The address and phone are printed on every **money receipt PDF**, so confirm these first.
 
-| Item | Placeholder used | Where |
+## 2. Chairman & MD — edit in **Admin → Content → চেয়ারম্যান/এমডি**
+
+| Item | Placeholder | Note |
 |---|---|---|
-| Plot prices (3/5/10 Katha) | "Call for price" / "মূল্যের জন্য কল করুন" | Plot tabs |
-| Booking money | "Call for details" | Plot tabs |
-| Web3Forms access key | `YOUR_WEB3FORMS_ACCESS_KEY` | `src/content/site.ts` (or set env `PUBLIC_WEB3FORMS_KEY`) — form will NOT deliver email until replaced |
+| Chairman's name | literally `"Chairman"` | Real name pending |
+| MD's name | literally `"Managing Director"` | Real name pending |
+| Both messages | Drafted text based on the brochure | Replace with the client's own wording |
+| Both photos | none (empty box renders) | Upload and set the photo URL |
 
-## Media (all generated placeholder art — replace with real renders)
-
-| Item | File | Note |
-|---|---|---|
-| Hero gateway render | `src/assets/img/hero.webp` | Or upload via Sanity → Hero |
-| Master plan illustration | `src/assets/img/masterplan.webp` | Or Sanity → Master Plan. Hotspot positions (`src/content/site.ts` → `hotspots`, x/y %) must be re-tuned to the real image |
-| Gallery ×6 | `src/assets/img/gallery-1…6.webp` | Or Sanity → Gallery |
-| Neighborhood locator maps ×4 | `src/assets/img/landmark-*.webp` | |
-| Brochure PDF | `src/assets/brochure.pdf` (1-page placeholder) | Or Sanity → Brochure |
-| Logo / favicon / OG image | `public/favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`, `icon-512.png`, `og-image.png` | Generated "SD" emblem — swap for the real logo exports (`npm run assets` regenerates the placeholders) |
-
-## Config
+## 3. South City project — edit in **Admin → Projects → South City**
 
 | Item | Placeholder | Where |
 |---|---|---|
-| Production domain | `https://southcity.pages.dev` | `astro.config.mjs` (`site`), `public/robots.txt` sitemap line |
-| Sanity project ID | `YOUR_SANITY_PROJECT_ID` / empty env | `sanity/sanity.config.ts`, `.env.example` |
-| GA4 / Meta Pixel IDs | commented-out block | `src/layouts/BaseLayout.astro` `<head>` |
-| Google Map pin | search query "Sayedpur, South Keraniganj, Dhaka" | `src/content/site.ts` → `settings.mapQuery` — replace with exact plus-code/coords for a precise pin |
+| **Plot prices** | `null` → renders **"Call for price" / "মূল্যের জন্য কল করুন"** | `plotTypes` JSON |
+| Plot dimensions | `36×60`, `50×72`, `72×100 ft` — derived from the Katha areas | `plotTypes` JSON — confirm the real dimensions |
+| Google Map pin | search query `Sayedpur, South Keraniganj, Dhaka` | `mapEmbedUrl` — replace with an exact plus-code/coordinates for a precise pin |
+| Brochure PDF | `null` — the Download Brochure button is hidden until set | `brochureUrl` |
+| Project logo | falls back to the company SD logo | `logoUrl` — set South City's own logo |
+| Indicative plot `basePrice` | `sizeKatha × 1,200,000` on the 32 seeded plots | Internal/indicative only — never shown publicly. The real price is negotiated per sale. |
+| Landmark items | "Planned within South City" / "Within 6 km" — conservative phrasings | `landmarks` JSON — refine with real named schools/hospitals/bazaars |
 
-## Content notes (verify with the owner)
+## 4. Installment policy — **in code**, one place
 
-- Plot **dimensions** (36×60 ft etc.) are illustrative approximations I derived
-  from the Katha areas — confirm real plot dimensions.
-- Neighborhood tab items marked "Planned within South City" / "Within 6 km" are
-  conservative phrasings from the spec's facts — refine with real named schools,
-  hospitals, bazaars when available.
-- Bangla copy should be proof-read by a native reader before launch (spec §13).
+`src/server/services/payments.ts` — the comment block at the top of the file.
+
+Current default (spec §21 was unconfirmed):
+
+- **No late fee**
+- **No grace period** — an unpaid installment is OVERDUE the day after its due date
+- **Cancellation releases the plot** back to AVAILABLE; refunds are handled offline
+
+Changing the policy means changing that file (and adding tests in `payments.test.ts`).
+
+## 5. Money receipt format — **in code**
+
+`src/server/pdf/receipt.tsx`. Currently: company header (name/address/phone from
+CompanyProfile), receipt serial `RCP-<year>-<6 digits>`, customer + project/plot + sale ref,
+amount, and two signature lines ("Received by" / "Authorized signature").
+Confirm the layout, then adjust that component.
+
+## 6. Domain & environment — `.env`
+
+| Item | Placeholder |
+|---|---|
+| Domain | `southdhaka.com.bd` (assumed) — set in `Caddyfile`, `AUTH_URL`, `NEXT_PUBLIC_SITE_URL` |
+| `AUTH_SECRET` | `change-me-…` — **must** be replaced: `openssl rand -base64 32` |
+| `POSTGRES_PASSWORD` | `change-me-strong-password` — **must** be replaced |
+| Seeded admin password | `ChangeMe#2026` — forced change on first login, but set a real one via `SEED_ADMIN_PASSWORD` |
+
+## 7. Media
+
+South City images are real and in place (`public/projects/south-city/` — hero, 6 gallery
+images, master plan, 4 landmark images). The company **SD logo** (`public/brand/sd-logo.svg`)
+is a generated wordmark — swap it for the real logo export.
+
+---
+
+## Non-negotiable (spec §21)
+
+- ❌ **No "RAJUK Approved" badge** — the company does not hold it.
+- ❌ **No REHAB logo** — the company is not a member.
+
+Neither appears anywhere in the codebase. Do not add them.
+
+Also confirm before launch: the Bangla copy should be proof-read by a native reader, and
+the `tel:` / `wa.me` links tested on a real phone.

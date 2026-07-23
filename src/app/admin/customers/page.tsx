@@ -9,11 +9,13 @@ import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/admin/page-header';
+import { getActiveProjectId } from '@/server/projects';
 import { Plus } from 'lucide-react';
 
 export const metadata: Metadata = { title: 'কাস্টমার' };
 
 interface SearchParams {
+  project?: string;
   q?: string;
   size?: string;
   sector?: string;
@@ -24,6 +26,7 @@ interface SearchParams {
 export default async function CustomersPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   await requireStaff();
   const sp = await searchParams;
+  const activeProject = await getActiveProjectId(sp.project);
 
   const where: Prisma.CustomerWhereInput = {};
   if (sp.q) {
@@ -36,6 +39,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
     ];
   }
   const saleFilter: Prisma.SaleWhereInput = {};
+  if (activeProject) saleFilter.projectId = activeProject;
   if (sp.status) saleFilter.status = sp.status as Prisma.SaleWhereInput['status'];
   if (sp.sector) saleFilter.plot = { sector: sp.sector };
   if (sp.size) saleFilter.plot = { ...(saleFilter.plot as object), sizeKatha: new Prisma.Decimal(sp.size) };

@@ -28,7 +28,10 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
       documents: { orderBy: { createdAt: 'desc' } },
       sales: {
         orderBy: { createdAt: 'desc' },
-        include: { plot: { select: { sector: true, plotNumber: true, sizeKatha: true } } },
+        include: {
+          plot: { select: { sector: true, plotNumber: true, sizeKatha: true } },
+          project: { select: { nameEn: true, nameBn: true } },
+        },
       },
     },
   });
@@ -119,6 +122,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
                 <TableHeader>
                   <TableRow>
                     <TableHead>সেল কোড</TableHead>
+                    <TableHead>প্রজেক্ট</TableHead>
                     <TableHead>প্লট</TableHead>
                     <TableHead>সাইজ</TableHead>
                     <TableHead>মূল্য</TableHead>
@@ -127,12 +131,13 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
                 </TableHeader>
                 <TableBody>
                   {c.sales.length === 0 && (
-                    <TableRow><TableCell colSpan={5} className="py-6 text-center text-muted-foreground">কোনো বিক্রয় নেই।</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="py-6 text-center text-muted-foreground">কোনো বিক্রয় নেই।</TableCell></TableRow>
                   )}
                   {c.sales.map((s) => (
                     <TableRow key={s.id}>
                       <TableCell><Link href={`/admin/sales/${s.id}`} className="text-navy hover:underline">{s.saleCode}</Link></TableCell>
-                      <TableCell>{s.plot.sector}-{s.plot.plotNumber.replace(`${s.plot.sector}-`, '')}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{s.project.nameBn ?? s.project.nameEn}</TableCell>
+                      <TableCell>{s.plot.plotNumber}</TableCell>
                       <TableCell>{formatKatha(s.plot.sizeKatha.toString(), 'bn')}</TableCell>
                       <TableCell>{formatBDT(s.salePrice.toString())}</TableCell>
                       <TableCell><SaleStatusBadge status={s.status} /></TableCell>

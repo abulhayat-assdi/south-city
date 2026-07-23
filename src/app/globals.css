@@ -45,9 +45,15 @@
     @apply font-display text-navy;
   }
 
-  /* Bangla reads better with more line spacing (spec §11). */
+  /* Bangla reads better with more line spacing (spec §6/§13). The <html> element
+     is lang="bn" (site default); an English page's shell sets lang="en" and must
+     reset the inherited value. */
   [lang='bn'] {
     line-height: 1.75;
+  }
+
+  [lang='en'] {
+    line-height: 1.6;
   }
 }
 

@@ -20,6 +20,7 @@ function nn(v: string | number | undefined | null): string | null {
 
 function parseForm(formData: FormData) {
   return plotSchema.safeParse({
+    projectId: formData.get('projectId'),
     sector: formData.get('sector'),
     plotNumber: formData.get('plotNumber'),
     sizeKatha: formData.get('sizeKatha'),
@@ -45,6 +46,7 @@ export async function createPlot(_prev: PlotActionState, formData: FormData): Pr
     await prisma.$transaction(async (tx) => {
       const plot = await tx.plot.create({
         data: {
+          projectId: d.projectId,
           sector: d.sector.toUpperCase(),
           plotNumber: d.plotNumber,
           sizeKatha: new Prisma.Decimal(d.sizeKatha),
@@ -84,6 +86,7 @@ export async function updatePlot(id: string, _prev: PlotActionState, formData: F
       const plot = await tx.plot.update({
         where: { id },
         data: {
+          projectId: d.projectId,
           sector: d.sector.toUpperCase(),
           plotNumber: d.plotNumber,
           sizeKatha: new Prisma.Decimal(d.sizeKatha),
@@ -129,6 +132,8 @@ export async function importPlotsCsv(
   formData: FormData,
 ): Promise<{ error?: string; imported?: number; skipped?: number }> {
   const user = await assertPermission('plot:write');
+  const projectId = String(formData.get('projectId') ?? '').trim();
+  if (!projectId) return { error: 'প্রজেক্ট নির্বাচন করুন' };
   const text = String(formData.get('csv') ?? '').trim();
   if (!text) return { error: 'CSV খালি' };
 
@@ -147,6 +152,7 @@ export async function importPlotsCsv(
   for (const line of lines) {
     const cells = line.split(',').map((c) => c.trim());
     const parsed = plotSchema.safeParse({
+      projectId,
       sector: cells[iSector],
       plotNumber: cells[iNo],
       sizeKatha: cells[iSize],
@@ -165,6 +171,7 @@ export async function importPlotsCsv(
     try {
       await prisma.plot.create({
         data: {
+          projectId,
           sector: d.sector.toUpperCase(),
           plotNumber: d.plotNumber,
           sizeKatha: new Prisma.Decimal(d.sizeKatha),

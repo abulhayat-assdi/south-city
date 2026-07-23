@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
 import { Poppins, Inter, Hind_Siliguri } from 'next/font/google';
-import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
 import './globals.css';
 
 const poppins = Poppins({
@@ -26,24 +24,21 @@ const hindSiliguri = Hind_Siliguri({
 
 export const metadata: Metadata = {
   title: {
-    default: 'South City — Where Your Dream Finds Its Address',
-    template: '%s · South City',
+    default: 'South Dhaka Properties & Housing Ltd. — Where Your Dream Finds Its Address',
+    template: '%s · South Dhaka Properties & Housing Ltd.',
   },
   description:
-    'South City — planned residential & commercial plots in Sayedpur, South Keraniganj, Dhaka. A project of South Dhaka Properties & Housing Ltd.',
+    'South Dhaka Properties & Housing Ltd. — planned residential & commercial land projects in Dhaka. South City, Sayedpur, South Keraniganj.',
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const locale = await getLocale();
-  const messages = await getMessages();
-
+// Bangla is the site default (spec §13). Each public page's <SiteShell> sets its
+// own `lang` (bn at "/", en under "/en"); admin & portal use Bangla labels.
+// NOTE: this layout is intentionally free of request-scoped calls (headers,
+// cookies, next-intl's getLocale) so the public pages can render statically/ISR.
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang={locale} className={`${poppins.variable} ${inter.variable} ${hindSiliguri.variable}`}>
-      <body>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
-        </NextIntlClientProvider>
-      </body>
+    <html lang="bn" className={`${poppins.variable} ${inter.variable} ${hindSiliguri.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }

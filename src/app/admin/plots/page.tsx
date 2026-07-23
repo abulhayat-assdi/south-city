@@ -11,11 +11,13 @@ import { Select } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/admin/page-header';
 import { PlotStatusBadge } from '@/components/admin/status-badge';
+import { getActiveProjectId } from '@/server/projects';
 import { Plus, Upload } from 'lucide-react';
 
 export const metadata: Metadata = { title: 'প্লট ইনভেন্টরি' };
 
 interface SearchParams {
+  project?: string;
   sector?: string;
   size?: string;
   category?: string;
@@ -26,8 +28,10 @@ interface SearchParams {
 export default async function PlotsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   await requireStaff();
   const sp = await searchParams;
+  const activeProject = await getActiveProjectId(sp.project);
 
   const where: Prisma.PlotWhereInput = {};
+  if (activeProject) where.projectId = activeProject;
   if (sp.sector) where.sector = sp.sector;
   if (sp.size) where.sizeKatha = new Prisma.Decimal(sp.size);
   if (sp.category) where.category = sp.category as Prisma.PlotWhereInput['category'];
@@ -36,8 +40,9 @@ export default async function PlotsPage({ searchParams }: { searchParams: Promis
 
   const plots = await prisma.plot.findMany({
     where,
-    orderBy: [{ sector: 'asc' }, { plotNumber: 'asc' }],
-    take: 200,
+    orderBy: [{ project: { sortOrder: 'asc' } }, { sector: 'asc' }, { plotNumber: 'asc' }],
+    include: { project: { select: { nameEn: true, nameBn: true } } },
+    take: 300,
   });
 
   return (
@@ -90,6 +95,7 @@ export default async function PlotsPage({ searchParams }: { searchParams: Promis
           <TableHeader>
             <TableRow>
               <TableHead>প্লট</TableHead>
+              <TableHead>প্রজেক্ট</TableHead>
               <TableHead>সাইজ</TableHead>
               <TableHead>ক্যাটাগরি</TableHead>
               <TableHead>রাস্তা</TableHead>
@@ -100,7 +106,7 @@ export default async function PlotsPage({ searchParams }: { searchParams: Promis
           <TableBody>
             {plots.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                   কোনো প্লট পাওয়া যায়নি।
                 </TableCell>
               </TableRow>
@@ -109,9 +115,10 @@ export default async function PlotsPage({ searchParams }: { searchParams: Promis
               <TableRow key={p.id}>
                 <TableCell>
                   <Link href={`/admin/plots/${p.id}`} className="font-medium text-navy hover:underline">
-                    {p.sector}-{p.plotNumber.replace(`${p.sector}-`, '')}
+                    {p.plotNumber}
                   </Link>
                 </TableCell>
+                <TableCell className="text-sm text-muted-foreground">{p.project.nameBn ?? p.project.nameEn}</TableCell>
                 <TableCell>{formatKatha(p.sizeKatha.toString(), 'bn')}</TableCell>
                 <TableCell>{p.category === 'RESIDENTIAL' ? 'আবাসিক' : 'বাণিজ্যিক'}</TableCell>
                 <TableCell>{p.roadWidthFt ? `${p.roadWidthFt} ft` : '—'}</TableCell>

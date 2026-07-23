@@ -5,17 +5,33 @@ import Link from 'next/link';
 import { importPlotsCsv } from '@/server/actions/plots';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 const SAMPLE = `sector,plotNumber,sizeKatha,category,roadWidthFt,dimensions,basePrice
 A,A-09,5,RESIDENTIAL,40,40ft x 90ft,6000000
 A,A-10,10,COMMERCIAL,60,50ft x 144ft,13000000`;
 
-export function ImportForm() {
+export function ImportForm({
+  projects,
+  defaultProjectId,
+}: {
+  projects: { id: string; name: string }[];
+  defaultProjectId?: string;
+}) {
   const [state, formAction, pending] = useActionState(importPlotsCsv, {} as { error?: string; imported?: number; skipped?: number });
 
   return (
     <form action={formAction} className="max-w-2xl space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="projectId">প্রজেক্ট</Label>
+        <Select id="projectId" name="projectId" defaultValue={defaultProjectId ?? projects[0]?.id ?? ''} required>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </Select>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="csv">CSV ডেটা</Label>
         <p className="text-xs text-muted-foreground">

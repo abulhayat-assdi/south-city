@@ -10,6 +10,7 @@ import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 export interface PlotFormValues {
+  projectId?: string;
   sector?: string;
   plotNumber?: string;
   sizeKatha?: string;
@@ -22,20 +23,34 @@ export interface PlotFormValues {
   remarks?: string;
 }
 
+export interface ProjectChoice {
+  id: string;
+  name: string;
+}
+
 export function PlotForm({
   action,
   initial,
   submitLabel,
+  projects,
 }: {
   action: (prev: PlotActionState, formData: FormData) => Promise<PlotActionState>;
   initial?: PlotFormValues;
   submitLabel: string;
+  projects: ProjectChoice[];
 }) {
   const [state, formAction, pending] = useActionState<PlotActionState, FormData>(action, {});
 
   return (
     <form action={formAction} className="max-w-2xl space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="প্রজেক্ট (Project)" name="projectId">
+          <Select name="projectId" defaultValue={initial?.projectId ?? projects[0]?.id ?? ''} required>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </Select>
+        </Field>
         <Field label="সেক্টর (Sector)" name="sector">
           <Select name="sector" defaultValue={initial?.sector ?? 'A'} required>
             {['A', 'B', 'C', 'D'].map((s) => (

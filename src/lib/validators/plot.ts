@@ -10,6 +10,7 @@ const decimalString = z
   .regex(/^\d+(\.\d{1,2})?$/, 'সংখ্যা সঠিক নয়');
 
 export const plotSchema = z.object({
+  projectId: z.string().trim().min(1, 'প্রজেক্ট নির্বাচন করুন'),
   sector: z.string().trim().min(1, 'সেক্টর দিন').max(4),
   plotNumber: z.string().trim().min(1, 'প্লট নম্বর দিন').max(20),
   sizeKatha: decimalString,

@@ -20,6 +20,7 @@ export default async function PlotDetailPage({ params }: { params: Promise<{ id:
   const plot = await prisma.plot.findUnique({
     where: { id },
     include: {
+      project: { select: { nameEn: true, nameBn: true, slug: true } },
       sales: {
         orderBy: { createdAt: 'desc' },
         include: { customer: { select: { id: true, customerCode: true, fullNameEn: true } } },
@@ -29,6 +30,7 @@ export default async function PlotDetailPage({ params }: { params: Promise<{ id:
   if (!plot) notFound();
 
   const rows: [string, React.ReactNode][] = [
+    ['প্রজেক্ট', plot.project.nameBn ?? plot.project.nameEn],
     ['সেক্টর', plot.sector],
     ['প্লট নম্বর', plot.plotNumber],
     ['সাইজ', formatKatha(plot.sizeKatha.toString(), 'bn')],

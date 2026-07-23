@@ -3,7 +3,7 @@ import type { Prisma, PrismaClient } from '@prisma/client';
 /**
  * Human-readable sequential codes. Generated inside the same transaction as the
  * row they belong to, so concurrent creates cannot collide.
- *   Customer  SC-0001
+ *   Customer  SDC-0001
  *   Sale      SALE-2026-0001
  *   Payment   RCP-2026-000123
  */
@@ -15,7 +15,7 @@ function pad(n: number, width: number): string {
 
 export async function nextCustomerCode(tx: Tx): Promise<string> {
   const count = await tx.customer.count();
-  return `SC-${pad(count + 1, 4)}`;
+  return `SDC-${pad(count + 1, 4)}`;
 }
 
 export async function nextSaleCode(tx: Tx, year = new Date().getFullYear()): Promise<string> {

@@ -1,5 +1,7 @@
-// South City ERP — Prisma schema (spec §4).
+// South Dhaka Properties & Housing Ltd. — Company website + multi-project ERP (spec §4).
 // Money is ALWAYS Decimal(14,2) BDT. Never Float.
+// South City is the first PROJECT under the company; more projects (North City…)
+// are added purely as data via the admin Projects module — no code change.
 
 generator client {
   provider = "prisma-client-js"
@@ -15,6 +17,12 @@ enum Role {
   STAFF
   CUSTOMER
 }
+
+enum ProjectStatus {
+  UPCOMING
+  ONGOING
+  COMPLETED
+} // internal use; not a public badge
 
 enum PlotStatus {
   AVAILABLE
@@ -72,6 +80,111 @@ enum EnquiryStatus {
   CLOSED
 }
 
+// ---------- Company (singleton content) ----------
+model CompanyProfile {
+  id               Int      @id @default(1) // single row
+  nameEn           String   @default("South Dhaka Properties & Housing Ltd.")
+  nameBn           String?
+  taglinePrimary   String?  @default("Where Your Dream Finds Its Address")
+  taglineSecondary String?  @default("Building Landmark, Creating Legacy")
+  aboutEn          String?
+  aboutBn          String?
+  visionEn         String?
+  visionBn         String?
+  missionEn        String?
+  missionBn        String?
+  coreValues       Json? // [{en,bn}]
+  logoUrl          String?
+  phone            String?
+  email            String?
+  addressEn        String?
+  addressBn        String?
+  facebook         String?
+  youtube          String?
+  linkedin         String?
+  whatsapp         String?
+  updatedAt        DateTime @updatedAt
+}
+
+model LeaderMessage {
+  id         String  @id @default(cuid())
+  role       String // "CHAIRMAN" | "MD"
+  personName String
+  titleEn    String?
+  titleBn    String?
+  photoUrl   String?
+  messageEn  String?
+  messageBn  String?
+  sortOrder  Int     @default(0)
+}
+
+model NewsPost {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  titleEn     String
+  titleBn     String?
+  bodyEn      String?
+  bodyBn      String?
+  coverUrl    String?
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([isPublished, publishedAt])
+}
+
+// ---------- Projects ----------
+model Project {
+  id            String        @id @default(cuid())
+  slug          String        @unique // "south-city"
+  nameEn        String
+  nameBn        String?
+  status        ProjectStatus @default(ONGOING) // internal
+  tagline       String?
+  logoUrl       String?
+  heroImageUrl  String?
+  locationEn    String?
+  locationBn    String?
+  sizeText      String? // "~500 Bigha"
+  sectorsText   String? // "4 (A–D)"
+  plotSizesText String? // "3, 5 & 10 Katha"
+  roadWidthText String? // "25/40/60 ft"
+  descriptionEn String?
+  descriptionBn String?
+  amenities     Json? // [{icon,en,bn}]
+  landmarks     Json? // [{group,label,image,items:[{name,note}]}]
+  distances     Json? // [{place,value}]
+  boundaries    Json? // [{side,value}]
+  plotTypes     Json? // [{katha,sqft,dimensions,price,note}]
+  trustItems    Json? // [{icon,en,bn}]
+  mapEmbedUrl   String?
+  masterPlanUrl String?
+  brochureUrl   String?
+  isPublished   Boolean       @default(true)
+  sortOrder     Int           @default(0)
+
+  gallery   ProjectImage[]
+  plots     Plot[]
+  sales     Sale[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([isPublished, sortOrder])
+}
+
+model ProjectImage {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  url       String
+  captionEn String?
+  captionBn String?
+  sortOrder Int     @default(0)
+
+  @@index([projectId, sortOrder])
+}
+
+// ---------- ERP core ----------
 model User {
   id                 String     @id @default(cuid())
   name               String
@@ -93,11 +206,11 @@ model User {
 
 model Customer {
   id           String  @id @default(cuid())
-  customerCode String  @unique // e.g. SC-0001
+  customerCode String  @unique // e.g. SDC-0001
   userId       String? @unique // login account (created by admin)
   user         User?   @relation(fields: [userId], references: [id])
 
-  // --- data from the hard-copy purchase form (§8) ---
+  // --- data from the hard-copy purchase form (§10) ---
   fullNameEn       String
   fullNameBn       String?
   fatherName       String?
@@ -135,6 +248,8 @@ model Customer {
 
 model Plot {
   id            String       @id @default(cuid())
+  projectId     String
+  project       Project      @relation(fields: [projectId], references: [id])
   sector        String // A | B | C | D
   plotNumber    String
   sizeKatha     Decimal      @db.Decimal(6, 2) // 3, 5, 10
@@ -149,13 +264,15 @@ model Plot {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
-  @@unique([sector, plotNumber])
-  @@index([status, sizeKatha, sector])
+  @@unique([projectId, sector, plotNumber])
+  @@index([projectId, status, sizeKatha, sector])
 }
 
 model Sale {
   id         String   @id @default(cuid())
   saleCode   String   @unique // e.g. SALE-2026-0001
+  projectId  String // denormalized for fast filtering
+  project    Project  @relation(fields: [projectId], references: [id])
   plotId     String
   plot       Plot     @relation(fields: [plotId], references: [id])
   customerId String
@@ -177,6 +294,7 @@ model Sale {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
+  @@index([projectId, status])
   @@index([customerId, status])
 }
 
@@ -196,13 +314,13 @@ model Installment {
 }
 
 model Payment {
-  id            String       @id @default(cuid())
-  receiptNo     String       @unique // e.g. RCP-2026-000123
+  id            String        @id @default(cuid())
+  receiptNo     String        @unique // e.g. RCP-2026-000123
   saleId        String
-  sale          Sale         @relation(fields: [saleId], references: [id])
-  installmentId String?
-  installment   Installment? @relation(fields: [installmentId], references: [id])
-  amount        Decimal      @db.Decimal(14, 2)
+  sale          Sale          @relation(fields: [saleId], references: [id])
+  installmentId String? // primary target hint; allocation across installments is derived
+  installment   Installment?  @relation(fields: [installmentId], references: [id])
+  amount        Decimal       @db.Decimal(14, 2)
   paymentDate   DateTime
   method        PaymentMethod
   referenceNo   String? // cheque/trx id
@@ -224,7 +342,7 @@ model Payment {
 model Document {
   id           String       @id @default(cuid())
   type         DocumentType
-  fileUrl      String // stored path under UPLOAD_DIR — served via auth-checked route
+  fileUrl      String // stored key under UPLOAD_DIR — served via auth-checked route
   fileName     String
   mimeType     String?
   sizeBytes    Int?
@@ -244,7 +362,7 @@ model AuditLog {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   action    String // CREATE_SALE, RECORD_PAYMENT, VOID_PAYMENT, ...
-  entity    String // Sale, Payment, Customer, Plot, User
+  entity    String // Sale, Payment, Customer, Plot, Project, User
   entityId  String
   before    Json?
   after     Json?
@@ -255,34 +373,18 @@ model AuditLog {
   @@index([createdAt])
 }
 
-/// Public lead-form enquiry — separate from Customer; admin can convert (§11).
+/// Public lead-form enquiry — separate from Customer; admin can convert.
 model Enquiry {
-  id          String        @id @default(cuid())
-  name        String
-  phone       String
-  email       String?
-  message     String?
-  preferredSize String?     // "3" | "5" | "10"
-  source      String? // "public-lead-form"
-  status      EnquiryStatus @default(NEW)
-  createdAt   DateTime      @default(now())
+  id            String        @id @default(cuid())
+  name          String
+  phone         String
+  email         String?
+  message       String?
+  projectSlug   String? // which project the enquiry is about
+  preferredSize String? // "3" | "5" | "10"
+  source        String? // "public-lead-form"
+  status        EnquiryStatus @default(NEW)
+  createdAt     DateTime      @default(now())
 
   @@index([status, createdAt])
-}
-
-// --- public site content, editable from admin (replaces the CMS) ---
-model SiteSetting {
-  key       String   @id // hero.title, contact.phone, brochure.pdf ...
-  valueEn   String?
-  valueBn   String?
-  updatedAt DateTime @updatedAt
-}
-
-model MediaAsset {
-  id        String   @id @default(cuid())
-  url       String
-  fileName  String
-  altEn     String?
-  altBn     String?
-  createdAt DateTime @default(now())
 }

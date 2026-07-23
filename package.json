@@ -1,14 +1,14 @@
 {
-  "name": "southcity-app",
+  "name": "southdhaka-app",
   "version": "1.0.0",
   "private": true,
-  "description": "South City — public marketing site + customer portal + admin ERP for land sales. A project of South Dhaka Properties & Housing Ltd.",
+  "description": "South Dhaka Properties & Housing Ltd. — public bilingual company website + multi-project admin/staff ERP for land sales + customer portal.",
   "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

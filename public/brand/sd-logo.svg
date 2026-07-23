@@ -1,0 +1,9 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 512 512">
+  <circle cx="256" cy="256" r="248" fill="#14245C"/>
+  <circle cx="256" cy="256" r="248" fill="none" stroke="#C9A227" stroke-width="14"/>
+  <circle cx="256" cy="256" r="196" fill="none" stroke="#C9A227" stroke-width="6"/>
+  <text x="256" y="308" font-family="Georgia, 'Times New Roman', serif" font-size="170" font-weight="700" fill="#E2C56B" text-anchor="middle">SD</text>
+  <path d="M150 368 h212" stroke="#C9A227" stroke-width="8"/>
+  <text x="256" y="150" font-family="Arial, sans-serif" font-size="40" letter-spacing="6" font-weight="700" fill="#fff" text-anchor="middle">SOUTH CITY</text>
+</svg>

@@ -8,24 +8,28 @@ export type Permission =
   | 'user:manage'
   | 'customer:write'
   | 'plot:write'
+  | 'project:write'
   | 'sale:write'
   | 'payment:record'
   | 'payment:void'
-  | 'site-content:write'
+  | 'content:write'
   | 'report:read';
 
 const MATRIX: Record<Role, Permission[]> = {
+  // ADMIN can do everything incl. void payments, manage users, edit company/project content.
   ADMIN: [
     'user:manage',
     'customer:write',
     'plot:write',
+    'project:write',
     'sale:write',
     'payment:record',
     'payment:void',
-    'site-content:write',
+    'content:write',
     'report:read',
   ],
-  STAFF: ['customer:write', 'plot:write', 'sale:write', 'payment:record', 'report:read'],
+  // STAFF: plots/customers/sales; record payments. NOT void, NOT users, NOT company content.
+  STAFF: ['customer:write', 'plot:write', 'project:write', 'sale:write', 'payment:record', 'report:read'],
   CUSTOMER: [],
 };
 
